@@ -1,0 +1,55 @@
+<% content_for :title, "Night shifts" %>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold">Night shifts</h1>
+    <p class="text-sm text-gray-600">Scanning <code class="bg-gray-100 px-1 py-0.5 rounded"><%= @base_dir %></code></p>
+  </header>
+
+  <% if @shifts.empty? %>
+    <p class="text-gray-500">No night-shift worktrees found.</p>
+  <% else %>
+    <table class="min-w-full text-sm">
+      <thead class="text-left text-gray-500 border-b">
+        <tr>
+          <th class="py-2 pr-4">Slug</th>
+          <th class="py-2 pr-4">URL</th>
+          <th class="py-2 pr-4">Branch</th>
+          <th class="py-2 pr-4 text-right">Ahead</th>
+          <th class="py-2 pr-4">Last commit</th>
+          <th class="py-2 pr-4">When</th>
+          <th class="py-2 pr-4">Docs</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @shifts.each do |s| %>
+          <% url = night_shift_url(s.slug) %>
+          <tr class="border-b last:border-b-0 hover:bg-gray-50">
+            <td class="py-2 pr-4">
+              <%= link_to s.slug, admin_night_shift_path(s.slug), class: "font-mono font-medium text-indigo-700 hover:underline" %>
+            </td>
+            <td class="py-2 pr-4">
+              <%= link_to URI(url).host, url, target: :_blank, rel: "noopener", class: "font-mono text-xs text-indigo-700 hover:underline" %>
+            </td>
+            <td class="py-2 pr-4 font-mono text-gray-700"><%= s.branch || "—" %></td>
+            <td class="py-2 pr-4 text-right font-mono"><%= s.ahead_count.nil? ? "—" : s.ahead_count %></td>
+            <td class="py-2 pr-4">
+              <span class="font-mono text-xs text-gray-500"><%= s.last_commit_hash %></span>
+              <span><%= s.last_commit_subject %></span>
+            </td>
+            <td class="py-2 pr-4 text-gray-500 whitespace-nowrap">
+              <%= s.last_commit_at ? "#{time_ago_in_words(s.last_commit_at)} ago" : "—" %>
+            </td>
+            <td class="py-2 pr-4">
+              <% s.present_docs.each do |doc| %>
+                <%= link_to doc.delete_suffix(".md"),
+                            document_admin_night_shift_path(id: s.slug, doc: doc),
+                            class: "inline-block mr-2 text-xs text-indigo-700 hover:underline" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

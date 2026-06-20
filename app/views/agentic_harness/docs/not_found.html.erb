@@ -1,0 +1,10 @@
+<% content_for :title, "Doc not found" %>
+
+<div class="max-w-2xl mx-auto px-4 py-16 text-center">
+  <div class="text-4xl mb-4">📄</div>
+  <h1 class="text-xl font-bold text-gray-800 mb-2">No doc found for <code class="font-mono text-indigo-600"><%= @error_key %></code></h1>
+  <p class="text-sm text-gray-500 mb-6">
+    Create <code class="bg-gray-100 rounded px-1 font-mono">docs/<%= @error_key %>.md</code> to add documentation here.
+  </p>
+  <%= link_to "← Back to docs", docs_path, class: "text-sm text-indigo-600 hover:underline" %>
+</div>

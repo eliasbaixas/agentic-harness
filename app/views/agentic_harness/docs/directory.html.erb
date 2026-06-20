@@ -1,0 +1,47 @@
+<% content_for :title, @directory_key.split("/").map { |s| s.tr("-", " ").humanize }.join(" / ") %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <nav class="flex items-center space-x-2 text-sm mb-6" aria-label="Breadcrumb">
+    <%= link_to "Docs", docs_path, class: "text-gray-500 hover:text-gray-700 transition-colors" %>
+    <% @directory_key.split("/").each_with_index do |part, i| %>
+      <span class="text-gray-400">/</span>
+      <% path_so_far = @directory_key.split("/")[0..i].join("/") %>
+      <% if i == @directory_key.split("/").size - 1 %>
+        <span class="text-gray-900 dark:text-gray-100 font-medium"><%= part.tr("-", " ").humanize %></span>
+      <% else %>
+        <%= link_to part.tr("-", " ").humanize, doc_path(key: path_so_far),
+              class: "text-gray-500 hover:text-gray-700 transition-colors" %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+    <%= @directory_key.split("/").last.tr("-", " ").humanize %>
+  </h1>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <%= @directory_pages.size %> document<%= @directory_pages.size == 1 ? "" : "s" %> in
+    <code class="bg-gray-100 dark:bg-gray-800 rounded px-1 font-mono text-xs"><%= @directory_key %>/</code>
+  </p>
+
+  <div class="space-y-2">
+    <% @directory_pages.sort_by(&:key).each do |page| %>
+      <%= link_to doc_path(key: page.key),
+            class: "block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-sm transition-all" do %>
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm font-medium text-gray-800 dark:text-gray-200"><%= page.title %></div>
+            <div class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-0.5"><%= page.key %></div>
+          </div>
+          <% if page.last_updated %>
+            <span class="text-xs text-gray-400"><%= page.last_updated %></span>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="mt-8">
+    <%= link_to "← Back to docs", docs_path, class: "text-sm text-indigo-600 hover:underline" %>
+  </div>
+</div>

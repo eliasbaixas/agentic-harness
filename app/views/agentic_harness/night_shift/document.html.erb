@@ -1,0 +1,36 @@
+<% content_for :title, "#{@result.filename} — #{night_shift_slug}" %>
+
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <nav class="mb-4 text-sm">
+    <%= link_to "← Index", night_shift_path, class: "text-indigo-700 hover:underline" %>
+    <span class="text-gray-400 mx-1">/</span>
+    <span class="font-mono"><%= @result.filename %></span>
+  </nav>
+
+  <header class="mb-4 text-xs text-gray-500">
+    last modified <%= time_ago_in_words(@result.mtime) %> ago
+  </header>
+
+  <article class="night-shift-prose prose max-w-none">
+    <%= @rendered_html %>
+  </article>
+</div>
+
+<style>
+  .night-shift-prose h1 { font-size: 1.75rem; font-weight: 700; margin: 1em 0 0.5em; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4em; }
+  .night-shift-prose h2 { font-size: 1.25rem; font-weight: 600; margin: 1.5em 0 0.4em; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.3em; }
+  .night-shift-prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25em 0 0.3em; }
+  .night-shift-prose p  { margin: 0.85em 0; line-height: 1.65; }
+  .night-shift-prose ul,
+  .night-shift-prose ol { padding-left: 1.5em; margin: 0.75em 0; }
+  .night-shift-prose ul li { list-style-type: disc; }
+  .night-shift-prose ol li { list-style-type: decimal; }
+  .night-shift-prose code { background: #f3f4f6; padding: 0.1em 0.35em; border-radius: 0.25rem; font-family: ui-monospace, monospace; font-size: 0.85em; }
+  .night-shift-prose pre  { background: #1f2937; color: #f9fafb; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 1em 0; }
+  .night-shift-prose pre code { background: transparent; color: inherit; padding: 0; }
+  .night-shift-prose a { color: #4f46e5; text-decoration: underline; }
+  .night-shift-prose blockquote { border-left: 4px solid #e5e7eb; padding-left: 1em; color: #6b7280; margin: 1em 0; font-style: italic; }
+  .night-shift-prose table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1em 0; }
+  .night-shift-prose th, .night-shift-prose td { border: 1px solid #e5e7eb; padding: 0.4em 0.6em; text-align: left; }
+  .night-shift-prose th { background: #f9fafb; }
+</style>

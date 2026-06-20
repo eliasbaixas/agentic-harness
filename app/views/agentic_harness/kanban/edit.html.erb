@@ -1,0 +1,33 @@
+<% content_for :title, "Edit #{@task.slug}" %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <nav class="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 mb-6">
+    <%= link_to "Kanban", kanban_path, class: "hover:text-gray-700 dark:hover:text-gray-300" %>
+    <span>/</span>
+    <%= link_to @task.title, kanban_task_path(column: @task.column, slug: @task.slug), class: "hover:text-gray-700 dark:hover:text-gray-300 truncate max-w-xs" %>
+    <span>/</span>
+    <span class="text-gray-700 dark:text-gray-200 font-medium">Edit</span>
+  </nav>
+
+  <div class="mb-3 flex items-center justify-between">
+    <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit <code class="text-sm font-mono bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5">tasks/<%= @task.column %>/<%= @task.slug %>.md</code></h1>
+  </div>
+
+  <%= form_with url: kanban_task_path(column: @task.column, slug: @task.slug), method: :patch, local: true do %>
+    <div class="mb-4">
+      <%= text_area_tag :content, @task.path.read,
+            rows: 40,
+            class: "w-full font-mono text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y",
+            spellcheck: false,
+            autocomplete: "off" %>
+    </div>
+    <div class="flex items-center gap-3">
+      <%= submit_tag "Save",
+            class: "px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors cursor-pointer" %>
+      <%= link_to "Cancel", kanban_task_path(column: @task.column, slug: @task.slug),
+            class: "px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors" %>
+    </div>
+  <% end %>
+
+</div>

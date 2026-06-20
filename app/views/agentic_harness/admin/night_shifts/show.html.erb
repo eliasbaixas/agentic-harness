@@ -1,0 +1,46 @@
+<% content_for :title, "Night shift: #{@shift.slug}" %>
+
+<div class="max-w-5xl mx-auto px-4 py-6">
+  <nav class="mb-4 text-sm">
+    <%= link_to "← All night shifts", admin_night_shifts_path, class: "text-indigo-700 hover:underline" %>
+  </nav>
+
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold font-mono"><%= @shift.slug %></h1>
+    <dl class="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-700">
+      <dt class="text-gray-500">URL</dt>
+      <dd>
+        <% url = night_shift_url(@shift.slug) %>
+        <%= link_to URI(url).host, url, target: :_blank, rel: "noopener", class: "font-mono text-indigo-700 hover:underline" %>
+      </dd>
+      <dt class="text-gray-500">Branch</dt>
+      <dd class="font-mono"><%= @shift.branch || "—" %></dd>
+      <dt class="text-gray-500">Path</dt>
+      <dd class="font-mono"><%= @shift.path %></dd>
+      <dt class="text-gray-500">Ahead of main</dt>
+      <dd class="font-mono"><%= @shift.ahead_count.nil? ? "—" : "#{@shift.ahead_count} commits" %></dd>
+      <dt class="text-gray-500">Last commit</dt>
+      <dd>
+        <span class="font-mono text-xs text-gray-500"><%= @shift.last_commit_hash %></span>
+        <span><%= @shift.last_commit_subject %></span>
+        <span class="text-gray-500 ml-1">(<%= @shift.last_commit_at ? "#{time_ago_in_words(@shift.last_commit_at)} ago" : "—" %>)</span>
+      </dd>
+    </dl>
+  </header>
+
+  <section>
+    <h2 class="text-lg font-semibold mb-2">Documents</h2>
+    <% if @docs.empty? %>
+      <p class="text-gray-500">No allowlisted documents present.</p>
+    <% else %>
+      <ul class="space-y-1">
+        <% @docs.each do |doc| %>
+          <li>
+            <%= link_to doc, document_admin_night_shift_path(id: @shift.slug, doc: doc),
+                        class: "text-indigo-700 font-mono hover:underline" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+</div>

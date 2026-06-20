@@ -1,0 +1,58 @@
+<% content_for :title, "Documentation" %>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Documentation</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Human ↔ agent collaboration workspace &mdash;
+        <code class="bg-gray-100 rounded px-1 text-xs font-mono">docs/**/*.md</code>
+      </p>
+    </div>
+  </div>
+
+  <% if @by_section.empty? %>
+    <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
+      <p class="font-medium text-gray-700 mb-1">No docs yet</p>
+      <p>Create <code class="bg-gray-200 rounded px-1 font-mono text-xs">docs/features/my-feature.md</code> to get started.</p>
+    </div>
+  <% else %>
+    <div class="space-y-10">
+      <% section_labels = {
+           "features"    => { label: "Features",              icon: "✦", color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
+           "controllers" => { label: "Controllers",           icon: "⬡", color: "text-violet-600 bg-violet-50 border-violet-200" },
+           "api"         => { label: "API",                   icon: "⬡", color: "text-blue-600  bg-blue-50  border-blue-200"  },
+           "frontend"    => { label: "Frontend",              icon: "◈", color: "text-sky-600   bg-sky-50   border-sky-200"   },
+           "adr"         => { label: "Architecture Decisions",icon: "△", color: "text-amber-600 bg-amber-50 border-amber-200" },
+           "plans"       => { label: "Plans",                 icon: "◎", color: "text-green-600 bg-green-50 border-green-200" },
+           "runbooks"    => { label: "Runbooks",              icon: "▣", color: "text-red-600   bg-red-50   border-red-200"   },
+           "strategy"   => { label: "Strategy",              icon: "◉", color: "text-rose-600  bg-rose-50  border-rose-200"  },
+         } %>
+
+      <% @by_section.each do |section, pages| %>
+        <% meta = section_labels[section] || { label: section.humanize, icon: "◇", color: "text-gray-600 bg-gray-50 border-gray-200" } %>
+        <section>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-base font-semibold text-gray-700"><%= meta[:icon] %> <%= meta[:label] %></span>
+            <span class="text-xs text-gray-400 ml-1"><%= pages.size %> <%= "doc".pluralize(pages.size) %></span>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <% pages.each do |page| %>
+              <%= link_to doc_path(key: page.key),
+                    class: "group block rounded-lg border #{meta[:color]} px-4 py-3 hover:shadow-sm transition-shadow" do %>
+                <div class="font-medium text-sm group-hover:underline"><%= page.title %></div>
+                <div class="text-xs mt-0.5 opacity-70 font-mono"><%= page.key %></div>
+                <% if page.last_updated %>
+                  <div class="text-xs mt-1 opacity-50">updated <%= page.last_updated %></div>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>

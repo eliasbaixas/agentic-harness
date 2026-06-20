@@ -1,0 +1,96 @@
+<% content_for :title, @doc.title %>
+<% content_for :head do %>
+  <style>
+    .doc-prose { color: #1f2937; line-height: 1.75; }
+    .doc-prose h1,.doc-prose h2,.doc-prose h3,.doc-prose h4 { font-weight: 700; line-height: 1.3; margin-top: 1.75em; margin-bottom: 0.5em; color: #111827; }
+    .doc-prose h1 { font-size: 1.75rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4em; margin-top: 0; }
+    .doc-prose h2 { font-size: 1.25rem; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.3em; }
+    .doc-prose h3 { font-size: 1.05rem; }
+    .doc-prose p  { margin: 0.85em 0; }
+    .doc-prose ul,.doc-prose ol { padding-left: 1.5em; margin: 0.75em 0; }
+    .doc-prose li { margin: 0.3em 0; }
+    .doc-prose ul li { list-style-type: disc; }
+    .doc-prose ol li { list-style-type: decimal; }
+    .doc-prose a  { color: #4f46e5; text-decoration: underline; }
+    .doc-prose a:hover { color: #3730a3; }
+    .doc-prose code { background: #f3f4f6; border-radius: 0.25rem; padding: 0.1em 0.35em; font-size: 0.85em; font-family: ui-monospace, monospace; color: #374151; }
+    .doc-prose pre  { background: #1f2937; color: #f9fafb; border-radius: 0.5rem; padding: 1rem 1.25rem; overflow-x: auto; margin: 1em 0; }
+    .doc-prose pre code { background: transparent; color: inherit; padding: 0; font-size: 0.875rem; }
+    .doc-prose blockquote { border-left: 4px solid #e5e7eb; padding-left: 1em; color: #6b7280; margin: 1em 0; font-style: italic; }
+    .doc-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1em 0; }
+    .doc-prose th,.doc-prose td { border: 1px solid #e5e7eb; padding: 0.5em 0.75em; text-align: left; }
+    .doc-prose th { background: #f9fafb; font-weight: 600; }
+    .doc-prose hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+    .doc-prose del { color: #9ca3af; }
+    .doc-prose mark { background: #fef08a; border-radius: 0.2em; padding: 0 0.15em; }
+    .doc-prose input[type=checkbox] { margin-right: 0.35em; }
+  </style>
+<% end %>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <%# Breadcrumb %>
+  <nav class="flex items-center gap-1.5 text-sm text-gray-400 mb-6">
+    <%= link_to "Docs", docs_path, class: "hover:text-gray-700" %>
+    <% @doc.key.split("/")[0..-2].each_with_index do |crumb, i| %>
+      <span>/</span>
+      <span class="capitalize"><%= crumb.tr("-", " ") %></span>
+    <% end %>
+    <span>/</span>
+    <span class="text-gray-700 font-medium"><%= @doc.title %></span>
+  </nav>
+
+  <div class="flex gap-8 items-start">
+
+    <%# Main content %>
+    <article class="doc-prose flex-1 min-w-0">
+      <%= @doc.rendered_html %>
+    </article>
+
+    <%# Sidebar metadata %>
+    <aside class="w-56 flex-shrink-0 space-y-4 text-xs sticky top-6">
+
+      <% if @doc.controller_class.present? %>
+        <div class="rounded-lg bg-violet-50 border border-violet-200 p-3">
+          <div class="font-semibold text-violet-700 mb-1">Controller</div>
+          <code class="text-violet-800 font-mono text-xs break-all"><%= @doc.controller_class %></code>
+        </div>
+      <% end %>
+
+      <% if @doc.routes.any? %>
+        <div class="rounded-lg bg-gray-50 border border-gray-200 p-3">
+          <div class="font-semibold text-gray-600 mb-1">Routes</div>
+          <% @doc.routes.each do |route| %>
+            <div class="font-mono text-gray-700 text-xs break-all"><%= route %></div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if @doc.related_features.any? %>
+        <div class="rounded-lg bg-indigo-50 border border-indigo-200 p-3">
+          <div class="font-semibold text-indigo-700 mb-1">Related</div>
+          <% @doc.related_features.each do |feat| %>
+            <% related = AgenticHarness::DocsPage.find("features/#{feat}") %>
+            <div>
+              <% if related %>
+                <%= link_to related.title, doc_path(key: related.key), class: "text-indigo-600 hover:underline" %>
+              <% else %>
+                <span class="text-gray-400"><%= feat %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div class="rounded-lg bg-gray-50 border border-gray-200 p-3 space-y-1">
+        <div class="font-semibold text-gray-600 mb-1">File</div>
+        <code class="text-gray-500 break-all font-mono text-xs">docs/<%= @doc.key %>.md</code>
+        <% if @doc.last_updated %>
+          <div class="text-gray-400 mt-1">Updated <%= @doc.last_updated %></div>
+        <% end %>
+      </div>
+
+    </aside>
+  </div>
+
+</div>

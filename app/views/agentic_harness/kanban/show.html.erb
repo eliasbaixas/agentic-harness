@@ -1,0 +1,157 @@
+<% content_for :title, @task.title %>
+<% content_for :head do %>
+  <style>
+    .doc-prose { color: #1f2937; line-height: 1.75; }
+    .doc-prose h1,.doc-prose h2,.doc-prose h3,.doc-prose h4 { font-weight: 700; line-height: 1.3; margin-top: 1.75em; margin-bottom: 0.5em; color: #111827; }
+    .doc-prose h1 { font-size: 1.75rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4em; margin-top: 0; }
+    .doc-prose h2 { font-size: 1.25rem; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.3em; }
+    .doc-prose h3 { font-size: 1.05rem; }
+    .doc-prose p  { margin: 0.85em 0; }
+    .doc-prose ul,.doc-prose ol { padding-left: 1.5em; margin: 0.75em 0; }
+    .doc-prose li { margin: 0.3em 0; }
+    .doc-prose ul li { list-style-type: disc; }
+    .doc-prose ol li { list-style-type: decimal; }
+    .doc-prose a  { color: #4f46e5; text-decoration: underline; }
+    .doc-prose a:hover { color: #3730a3; }
+    .doc-prose code { background: #f3f4f6; border-radius: 0.25rem; padding: 0.1em 0.35em; font-size: 0.85em; font-family: ui-monospace, monospace; color: #374151; }
+    .doc-prose pre  { background: #1f2937; color: #f9fafb; border-radius: 0.5rem; padding: 1rem 1.25rem; overflow-x: auto; margin: 1em 0; }
+    .doc-prose pre code { background: transparent; color: inherit; padding: 0; font-size: 0.875rem; }
+    .doc-prose blockquote { border-left: 4px solid #e5e7eb; padding-left: 1em; color: #6b7280; margin: 1em 0; font-style: italic; }
+    .doc-prose table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1em 0; }
+    .doc-prose th,.doc-prose td { border: 1px solid #e5e7eb; padding: 0.5em 0.75em; text-align: left; }
+    .doc-prose th { background: #f9fafb; font-weight: 600; }
+    .doc-prose hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+    .doc-prose input[type=checkbox] { margin-right: 0.35em; }
+  </style>
+<% end %>
+
+<%
+  column_dot_colors = {
+    "gray"  => "bg-gray-400",
+    "blue"  => "bg-blue-400",
+    "amber" => "bg-amber-400",
+    "red"   => "bg-red-400",
+    "green" => "bg-green-400",
+    "slate" => "bg-slate-400",
+  }
+
+  priority_badge = {
+    "P0" => "bg-red-600 text-white",
+    "P1" => "bg-orange-500 text-white",
+    "P2" => "bg-blue-500 text-white",
+    "P3" => "bg-gray-400 text-white",
+  }
+%>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <%# Breadcrumb %>
+  <nav class="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 mb-6">
+    <%= link_to "Kanban", kanban_path, class: "hover:text-gray-700 dark:hover:text-gray-300" %>
+    <span>/</span>
+    <span class="inline-flex items-center gap-1">
+      <span class="w-2 h-2 rounded-full <%= column_dot_colors[@task.column_color] %>"></span>
+      <span><%= @task.column_label %></span>
+    </span>
+    <span>/</span>
+    <span class="text-gray-700 dark:text-gray-200 font-medium"><%= @task.title %></span>
+  </nav>
+
+  <div class="flex gap-8 items-start">
+
+    <%# Main content %>
+    <article class="doc-prose flex-1 min-w-0">
+      <%= @task.rendered_html %>
+    </article>
+
+    <%# Sidebar metadata %>
+    <aside class="w-56 flex-shrink-0 space-y-4 text-xs sticky top-6">
+
+      <%# Status %>
+      <div class="rounded-lg bg-<%= @task.column_color %>-50 border border-<%= @task.column_color %>-200 p-3">
+        <div class="font-semibold text-<%= @task.column_color %>-700 mb-1">Status</div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full <%= column_dot_colors[@task.column_color] %>"></span>
+          <span class="font-medium text-<%= @task.column_color %>-800"><%= @task.column_label %></span>
+        </div>
+      </div>
+
+      <% if @task.id %>
+        <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+          <div class="font-semibold text-gray-600 dark:text-gray-400 mb-1">ID</div>
+          <code class="text-gray-700 dark:text-gray-300 font-mono text-xs"><%= @task.id %></code>
+        </div>
+      <% end %>
+
+      <% if @task.priority %>
+        <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+          <div class="font-semibold text-gray-600 dark:text-gray-400 mb-1">Priority</div>
+          <span class="text-xs font-bold px-2 py-0.5 rounded <%= priority_badge[@task.priority] || 'bg-gray-300 text-gray-700' %>"><%= @task.priority %></span>
+        </div>
+      <% end %>
+
+      <% if @task.tags.any? %>
+        <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+          <div class="font-semibold text-gray-600 dark:text-gray-400 mb-1">Tags</div>
+          <div class="flex flex-wrap gap-1">
+            <% @task.tags.each do |tag| %>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"><%= tag %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @task.deps.any? %>
+        <div class="rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 p-3">
+          <div class="font-semibold text-orange-700 dark:text-orange-300 mb-1">Dependencies</div>
+          <% @task.deps.each do |dep| %>
+            <div class="font-mono text-orange-600 dark:text-orange-400"><%= dep %></div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if @task.owner.present? %>
+        <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+          <div class="font-semibold text-gray-600 dark:text-gray-400 mb-1">Owner</div>
+          <span class="text-gray-700 dark:text-gray-300"><%= @task.owner %></span>
+        </div>
+      <% end %>
+
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 space-y-1">
+        <div class="font-semibold text-gray-600 dark:text-gray-400 mb-1">File</div>
+        <code class="text-gray-500 dark:text-gray-400 break-all font-mono text-xs">tasks/<%= @task.column %>/<%= @task.slug %>.md</code>
+        <% if @task.created %>
+          <div class="text-gray-400 dark:text-gray-500 mt-1">Created <%= @task.created %></div>
+        <% end %>
+      </div>
+
+      <%# Actions %>
+      <div class="space-y-2 pt-1">
+        <%= link_to edit_kanban_task_path(column: @task.column, slug: @task.slug),
+              class: "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg>
+          Edit markdown
+        <% end %>
+
+        <% if @task.column != "90_archive" %>
+          <%= button_to kanban_task_archive_path(column: @task.column, slug: @task.slug),
+                method: :post,
+                class: "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
+            Archive
+          <% end %>
+        <% end %>
+
+        <%= button_to kanban_task_path(column: @task.column, slug: @task.slug),
+              method: :delete,
+              data: { turbo_confirm: "Delete #{@task.slug}? This cannot be undone." },
+              class: "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+          Delete
+        <% end %>
+      </div>
+
+    </aside>
+  </div>
+
+</div>

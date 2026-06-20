@@ -1,0 +1,21 @@
+<% content_for :title, "Night shift: #{night_shift_slug}" %>
+
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold font-mono"><%= night_shift_slug %></h1>
+    <p class="text-sm text-gray-600">This worktree's night-shift artifacts.</p>
+  </header>
+
+  <% if @docs.empty? %>
+    <p class="text-gray-500">No allowlisted documents present yet.</p>
+  <% else %>
+    <ul class="space-y-2">
+      <% @docs.each do |doc| %>
+        <li>
+          <%= link_to doc, night_shift_doc_path(doc: doc),
+                      class: "text-indigo-700 font-mono hover:underline text-lg" %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

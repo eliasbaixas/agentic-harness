@@ -1,0 +1,23 @@
+/.bundle/
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+/pkg/
+*.gem
+.byebug_history
+Gemfile.lock
+.rspec_status
+
+# rubygems-tasks
+nbproject/
+
+# Bundler
+.bundle
+vendor/bundle
+
+# Dummy app build artifacts
+test/dummy/log/*
+test/dummy/tmp/*
+test/dummy/storage/*

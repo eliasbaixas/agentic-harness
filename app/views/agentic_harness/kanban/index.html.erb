@@ -1,0 +1,170 @@
+<% content_for :title, "Kanban Board" %>
+<% content_for :head do %>
+  <style>
+    .kanban-board { display: flex; gap: 1rem; overflow-x: auto; min-height: 60vh; align-items: flex-start; }
+    .kanban-column { min-width: 220px; max-width: 280px; flex: 1; }
+    .kanban-card { transition: box-shadow 0.15s ease; cursor: grab; }
+    .kanban-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .kanban-card:active { cursor: grabbing; }
+    /* Sticky column headers while dragging */
+    .is-dragging .kanban-column-header {
+      position: sticky; top: 6px; z-index: 20;
+      background: white; border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+      padding: 4px 6px; margin-bottom: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .is-dragging .kanban-column-header { background: #1f2937; }
+    }
+  </style>
+<% end %>
+
+<%
+  column_styles = {
+    "gray"  => { bg: "bg-gray-50",  border: "border-gray-200",  badge: "bg-gray-200 text-gray-700",  dot: "bg-gray-400"  },
+    "blue"  => { bg: "bg-blue-50",  border: "border-blue-200",  badge: "bg-blue-100 text-blue-700",  dot: "bg-blue-400"  },
+    "amber" => { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-400" },
+    "red"   => { bg: "bg-red-50",   border: "border-red-200",   badge: "bg-red-100 text-red-700",   dot: "bg-red-400"   },
+    "green" => { bg: "bg-green-50", border: "border-green-200", badge: "bg-green-100 text-green-700", dot: "bg-green-400" },
+    "slate" => { bg: "bg-slate-50", border: "border-slate-200", badge: "bg-slate-200 text-slate-600", dot: "bg-slate-400" },
+  }
+
+  priority_badge = {
+    "P0" => "bg-red-600 text-white",
+    "P1" => "bg-orange-500 text-white",
+    "P2" => "bg-blue-500 text-white",
+    "P3" => "bg-gray-400 text-white",
+  }
+%>
+
+<div class="max-w-[1600px] mx-auto px-4 py-6">
+
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Kanban Board</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Folder-based task management &mdash;
+        <code class="bg-gray-100 dark:bg-gray-800 rounded px-1 text-xs font-mono">tasks/</code>
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <% if @backlog %>
+        <%= link_to kanban_backlog_path,
+              class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-700" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+          </svg>
+          Backlog
+        <% end %>
+      <% end %>
+      <%= link_to docs_path,
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+        Docs
+      <% end %>
+    </div>
+  </div>
+
+  <%# Category filter bar %>
+  <div class="flex flex-wrap items-center gap-2 mb-5">
+    <%= link_to "All", kanban_path,
+          class: "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors #{@category.blank? ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}" %>
+    <% @categories.each do |key, label| %>
+      <%= link_to label, kanban_path(category: key),
+            class: "inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors #{@category == key ? 'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700'}" %>
+    <% end %>
+  </div>
+
+  <%# Active columns (exclude archive from the board) %>
+  <div class="kanban-board" data-controller="kanban">
+    <% AgenticHarness::TaskPage::COLUMNS.each do |col_key, col_meta| %>
+      <% next if col_key == "90_archive" %>
+      <% tasks = @columns[col_key] || [] %>
+      <% style = column_styles[col_meta[:color]] %>
+
+      <div class="kanban-column">
+        <div class="kanban-column-header flex items-center gap-2 mb-3 px-1">
+          <span class="w-2.5 h-2.5 rounded-full <%= style[:dot] %>"></span>
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200"><%= col_meta[:label] %></span>
+          <span class="text-xs px-1.5 py-0.5 rounded-full <%= style[:badge] %>"
+                data-kanban-target="count"
+                data-column="<%= col_key %>"><%= tasks.size %></span>
+        </div>
+
+        <%# Drop zone — cards live here %>
+        <div class="space-y-2 min-h-10 p-1 rounded-lg transition-colors"
+             data-kanban-target="dropzone"
+             data-column="<%= col_key %>"
+             data-action="dragover->kanban#dragOver dragenter->kanban#dragEnter dragleave->kanban#dragLeave drop->kanban#drop">
+
+          <% tasks.each do |task| %>
+            <%= link_to kanban_task_path(column: col_key, slug: task.slug),
+                  class: "kanban-card block rounded-lg border #{style[:border]} bg-white dark:bg-gray-900 px-3 py-2.5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors select-none",
+                  draggable: "true",
+                  data: {
+                    slug:   task.slug,
+                    column: col_key,
+                    action: "dragstart->kanban#dragStart dragend->kanban#dragEnd",
+                  } do %>
+              <div class="flex items-start justify-between gap-1">
+                <div class="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug"><%= task.title %></div>
+                <% if task.priority %>
+                  <span class="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded <%= priority_badge[task.priority] || 'bg-gray-300 text-gray-700' %>"><%= task.priority %></span>
+                <% end %>
+              </div>
+              <% if task.id %>
+                <div class="text-xs text-gray-400 dark:text-gray-500 font-mono mt-1"><%= task.id %></div>
+              <% end %>
+              <% if task.tags.any? %>
+                <div class="flex flex-wrap gap-1 mt-1.5">
+                  <% task.tags.each do |tag| %>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"><%= tag %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          <% end %>
+
+          <%# Empty-column placeholder — hidden when cards are present %>
+          <div class="rounded-lg border border-dashed <%= style[:border] %> <%= style[:bg] %> px-3 py-4 text-center text-xs text-gray-400 dark:text-gray-500 <%= tasks.any? ? 'hidden' : '' %>"
+               data-kanban-target="empty"
+               data-column="<%= col_key %>">
+            Drop here
+          </div>
+
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Archive section (collapsed) %>
+  <% archive_tasks = @columns["90_archive"] || [] %>
+  <% if archive_tasks.any? %>
+    <details class="mt-8">
+      <summary class="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+        Archive (<%= archive_tasks.size %>)
+      </summary>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
+        <% archive_tasks.each do |task| %>
+          <%= link_to kanban_task_path(column: "90_archive", slug: task.slug),
+                class: "block rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:border-slate-300 transition-colors" do %>
+            <div class="flex items-center justify-between gap-1">
+              <div class="font-medium"><%= task.title %></div>
+              <% if task.resolution == "done" %>
+                <span class="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">done</span>
+              <% elsif task.resolution.present? %>
+                <span class="flex-shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400"><%= task.resolution %></span>
+              <% end %>
+            </div>
+            <% if task.id %>
+              <div class="text-xs font-mono mt-0.5"><%= task.id %></div>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+</div>
