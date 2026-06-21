@@ -1,0 +1,180 @@
+<%#
+  Self-contained vanilla drag-and-drop for the kanban board.
+
+  Deliberately NOT a Stimulus controller: many host apps (this engine is
+  mounted into arbitrary Rails apps) don't ship Stimulus, and pulling in the
+  whole runtime + a bootstrap pack for one feature is disproportionate. This
+  script self-initializes by scanning for `.kanban-board[data-kanban-base]`
+  and reads the engine mount prefix from that data attribute, so persistence
+  hits the correct path regardless of where the engine is mounted
+  (e.g. /_agent/kanban/...), not a hardcoded /kanban.
+%>
+<script>
+(function () {
+  function init(board) {
+    if (board.dataset.kanbanWired === "1") return;
+    board.dataset.kanbanWired = "1";
+
+    // Mount-prefixed base, e.g. "/_agent/kanban" (trailing slash stripped).
+    var base = (board.dataset.kanbanBase || "/kanban").replace(/\/+$/, "");
+
+    function csrf() {
+      var m = document.querySelector("meta[name='csrf-token']");
+      return m ? m.content : "";
+    }
+    function zones() {
+      return Array.prototype.slice.call(
+        board.querySelectorAll("[data-kanban-target='dropzone']")
+      );
+    }
+    function cardsContainer(zone) {
+      return zone.querySelector("[data-kanban-target='cards']") || zone;
+    }
+    function columnSlugs(container) {
+      return Array.prototype.slice
+        .call(container.querySelectorAll("[data-slug]"))
+        .map(function (c) { return c.dataset.slug; });
+    }
+    function insertionPoint(container, clientY, exclude) {
+      var cards = Array.prototype.slice
+        .call(container.querySelectorAll("[data-slug]"))
+        .filter(function (c) { return c !== exclude; });
+      for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].getBoundingClientRect();
+        if (clientY < r.top + r.height / 2) return cards[i];
+      }
+      return null;
+    }
+    function insertBefore(container, card, point) {
+      var emptyEl = container.querySelector("[data-kanban-target='empty']");
+      if (point) container.insertBefore(card, point);
+      else if (emptyEl) container.insertBefore(card, emptyEl);
+      else container.appendChild(card);
+    }
+    function updateCounts(decCol, incCol) {
+      board.querySelectorAll("[data-kanban-target='count']").forEach(function (b) {
+        var col = b.dataset.column;
+        var n = parseInt(b.textContent || "0", 10) || 0;
+        if (col === decCol) b.textContent = Math.max(0, n - 1);
+        if (col === incCol) b.textContent = n + 1;
+      });
+    }
+    function updateEmpty() {
+      var args = Array.prototype.slice.call(arguments);
+      zones().forEach(function (zone) {
+        if (args.indexOf(zone.dataset.column) === -1) return;
+        var c = cardsContainer(zone);
+        var has = !!c.querySelector("[data-slug]");
+        var emptyEl = c.querySelector("[data-kanban-target='empty']");
+        if (emptyEl) emptyEl.classList.toggle("hidden", has);
+      });
+    }
+
+    // ── Card drag source ────────────────────────────────────────────────
+    board.addEventListener("dragstart", function (e) {
+      var card = e.target.closest("[data-slug]");
+      if (!card || !board.contains(card)) return;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("application/json", JSON.stringify({
+        slug: card.dataset.slug, column: card.dataset.column
+      }));
+      requestAnimationFrame(function () {
+        card.classList.add("opacity-40");
+        board.classList.add("is-dragging");
+      });
+    });
+    board.addEventListener("dragend", function (e) {
+      var card = e.target.closest("[data-slug]");
+      if (card) card.classList.remove("opacity-40");
+      board.classList.remove("is-dragging");
+    });
+
+    // ── Drop zones ──────────────────────────────────────────────────────
+    zones().forEach(function (zone) {
+      zone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      });
+      zone.addEventListener("dragenter", function (e) {
+        e.preventDefault();
+        zone._enter = (zone._enter || 0) + 1;
+        zone.classList.add("ring-2", "ring-blue-400");
+      });
+      zone.addEventListener("dragleave", function () {
+        zone._enter = Math.max(0, (zone._enter || 1) - 1);
+        if (zone._enter === 0) zone.classList.remove("ring-2", "ring-blue-400");
+      });
+      zone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        zone._enter = 0;
+        zone.classList.remove("ring-2", "ring-blue-400");
+
+        var data;
+        try { data = JSON.parse(e.dataTransfer.getData("application/json")); }
+        catch (err) { return; }
+
+        var slug = data.slug, sourceColumn = data.column;
+        var targetColumn = zone.dataset.column;
+        var sameColumn = sourceColumn === targetColumn;
+
+        var card = board.querySelector(
+          "[data-slug='" + (window.CSS ? CSS.escape(slug) : slug) + "']" +
+          "[data-column='" + (window.CSS ? CSS.escape(sourceColumn) : sourceColumn) + "']"
+        );
+        if (!card) return;
+
+        var sourceZone = zones().filter(function (z) {
+          return z.dataset.column === sourceColumn;
+        })[0];
+        var targetCards = cardsContainer(zone);
+
+        var point = insertionPoint(targetCards, e.clientY, card);
+        insertBefore(targetCards, card, point);
+        card.dataset.column = targetColumn;
+
+        if (!sameColumn) {
+          updateEmpty(sourceColumn, targetColumn);
+          updateCounts(sourceColumn, targetColumn);
+        }
+
+        function revert() {
+          if (sourceZone) insertBefore(cardsContainer(sourceZone), card, null);
+          card.dataset.column = sourceColumn;
+          if (!sameColumn) {
+            updateEmpty(targetColumn, sourceColumn);
+            updateCounts(targetColumn, sourceColumn);
+          }
+        }
+
+        var headers = { "Content-Type": "application/json", "X-CSRF-Token": csrf() };
+        var requests = [];
+        if (!sameColumn) {
+          requests.push(fetch(
+            base + "/" + sourceColumn + "/" + encodeURIComponent(slug) + "/move",
+            { method: "PATCH", headers: headers,
+              body: JSON.stringify({ target_column: targetColumn }) }
+          ));
+        }
+        requests.push(fetch(
+          base + "/" + targetColumn + "/reorder",
+          { method: "PATCH", headers: headers,
+            body: JSON.stringify({ slugs: columnSlugs(targetCards) }) }
+        ));
+
+        Promise.all(requests).then(function (results) {
+          if (results.some(function (r) { return !r.ok; })) revert();
+        }).catch(revert);
+      });
+    });
+  }
+
+  function boot() {
+    document.querySelectorAll(".kanban-board[data-kanban-base]").forEach(init);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>

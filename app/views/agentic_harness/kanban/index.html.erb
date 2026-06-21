@@ -78,7 +78,7 @@
   </div>
 
   <%# Active columns (exclude archive from the board) %>
-  <div class="kanban-board" data-controller="kanban">
+  <div class="kanban-board" data-controller="kanban" data-kanban-base="<%= kanban_path %>">
     <% AgenticHarness::TaskPage::COLUMNS.each do |col_key, col_meta| %>
       <% next if col_key == "90_archive" %>
       <% tasks = @columns[col_key] || [] %>
@@ -168,3 +168,5 @@
   <% end %>
 
 </div>
+
+<%= render "board_script" %>
