@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
     "CHANGELOG.md"
   ]
 
-  spec.add_dependency "rails", ">= 7.1"
+  spec.add_dependency "rails", ">= 7.0"
   spec.add_dependency "redcarpet", ">= 3.5" # markdown rendering for docs + night-shift artifacts
 
   spec.add_development_dependency "minitest", "~> 5.0"

@@ -1,7 +1,7 @@
 # Agentic Harness
 
 [![Ruby](https://img.shields.io/badge/ruby-3.2+-CC342D.svg?style=flat-square)](https://www.ruby-lang.org)
-[![Rails](https://img.shields.io/badge/rails-7.1+-CC0000.svg?style=flat-square)](https://rubyonrails.org)
+[![Rails](https://img.shields.io/badge/rails-7.0+-CC0000.svg?style=flat-square)](https://rubyonrails.org)
 
 A lightweight Rails engine that adds surfaces for **agentic / unattended
 development work** alongside your normal app:
