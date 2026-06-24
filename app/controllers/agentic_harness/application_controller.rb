@@ -4,6 +4,11 @@ module AgenticHarness
   # Base controller for all engine controllers. Lets the host app plug its
   # own auth in via the configuration (no Devise dependency baked in).
   class ApplicationController < ::ApplicationController
+    # Use the engine's own self-contained (Tailwind) layout rather than the
+    # host app's chrome — the views are written in Tailwind utilities, which
+    # the host need not provide.
+    layout 'agentic_harness/application'
+
     helper_method :main_app, :engine if respond_to?(:helper_method)
 
     before_action :__agentic_authenticate
